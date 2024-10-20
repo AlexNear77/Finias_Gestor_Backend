@@ -16,6 +16,10 @@ export const getProducts = async (
           mode: 'insensitive', // Búsqueda sin sensibilidad a mayúsculas
         },
       } : {},
+      orderBy: {
+        // Ordenar por nombre
+        name: 'asc',
+      },
     });
     res.json(products);
   } catch (error) {

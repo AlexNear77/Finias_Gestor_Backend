@@ -24,6 +24,7 @@ model Products {
   name          String
   price         Float
   rating        Float?
+  //createdAt     DateTime   @default(now())
   stockQuantity Int
   Sales         Sales[]
   Purchases     Purchases[]

@@ -23,6 +23,10 @@ const getProducts = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
                     mode: 'insensitive', // Búsqueda sin sensibilidad a mayúsculas
                 },
             } : {},
+            orderBy: {
+                // Ordenar por nombre
+                name: 'asc',
+            },
         });
         res.json(products);
     }

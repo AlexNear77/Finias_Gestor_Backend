@@ -4,11 +4,13 @@ import bodyParser from 'body-parser';
 import cors from 'cors';
 import helmet from 'helmet'
 import morgan from 'morgan';
+
 /* Routes imports */
 import dashboardRoutes from './routes/dashboardRoutes';
 import productRoutes from './routes/productRoutes';
 import userRoutes from './routes/userRoutes';
 import expenseRoutes from './routes/expenseRoutes';
+import cloudinaryRoutes from './routes/cloudinaryRoutes';
 
 /* Configs */
 dotenv.config();
@@ -26,6 +28,7 @@ app.use("/dashboard", dashboardRoutes); // http://localhost:8000/dashboard
 app.use("/products", productRoutes); // http://localhost:8000/products
 app.use("/users", userRoutes); // http://localhost:8000/users
 app.use("/expenses", expenseRoutes); // http://localhost:8000/expenses
+app.use('/cloudinary', cloudinaryRoutes); // http://localhost:8000/cloudinary
 
 /* Server */
 const port = process.env.PORT || 3003;
