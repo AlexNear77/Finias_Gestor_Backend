@@ -20,26 +20,27 @@ model Users {
 }
 
 model Products {
-  productId     String      @id
+  productId     String        @id
   name          String
   price         Float
   rating        Float?
-  //createdAt     DateTime   @default(now())
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @default(now()) @updatedAt
   stockQuantity Int
   Sales         Sales[]
   Purchases     Purchases[]
-  //  description   String?
-  //  sizes         ProductSize[]  // Relación con los tamaños y stock específico por tamaño
-  //  gender        String?
+  description   String?
+  sizes         ProductSize[] // Relación con los tamaños y stock específico por tamaño
+  gender        String?
 }
 
-//model ProductSize {
-//  id            String   @id @default(uuid())
-//  size          String   // XS, S, M, L, etc.
-//  stockQuantity Int      // Cantidad de stock para ese tamaño
-//  product       Products @relation(fields: [productId], references: [productId])
-//  productId     String
-//}
+model ProductSize {
+  id            String   @id @default(uuid())
+  size          String // XS, S, M, L, etc.
+  stockQuantity Int // Cantidad de stock para ese tamaño
+  product       Products @relation(fields: [productId], references: [productId], onDelete: Cascade)
+  productId     String
+}
 
 model Sales {
   saleId      String   @id

@@ -10,15 +10,19 @@ export const getProducts = async (
   try {
     const search = req.query.search?.toString();
     const products = await prisma.products.findMany({
-      where: search ? {
-        name: {
-          contains: search,
-          mode: 'insensitive', // Búsqueda sin sensibilidad a mayúsculas
-        },
-      } : {},
+      where: search
+        ? {
+            name: {
+              contains: search,
+              mode: 'insensitive',
+            },
+          }
+        : {},
       orderBy: {
-        // Ordenar por nombre
         name: 'asc',
+      },
+      include: {
+        sizes: true,
       },
     });
     res.json(products);
@@ -38,6 +42,9 @@ export const getProductById = async (
       where: {
         productId: productId,
       },
+      include: {
+        sizes: true,
+      },
     });
     if (product) {
       res.json(product);
@@ -54,7 +61,16 @@ export const createProduct = async (
   res: Response
 ): Promise<void> => {
   try {
-    const { productId, name, price, rating, stockQuantity } = req.body;
+    const {
+      productId,
+      name,
+      price,
+      rating,
+      stockQuantity,
+      description,
+      gender,
+      sizes, // Esperamos que 'sizes' sea un array de objetos con 'size' y 'stockQuantity'
+    } = req.body;
 
      // Validación de campos obligatorios y tipos de datos
      if (!productId || typeof productId !== 'string' || productId.trim() === '') {
@@ -80,6 +96,45 @@ export const createProduct = async (
       return;
     }
 
+    // Validación de 'description' y 'gender' si están presentes
+    if (description !== undefined && typeof description !== 'string') {
+      res.status(400).json({ message: "La descripción debe ser una cadena si está presente" });
+      return;
+    }
+    if (gender !== undefined && typeof gender !== 'string') {
+      res.status(400).json({ message: "El género debe ser una cadena si está presente" });
+      return;
+    }
+
+    // Validación de 'sizes' si está presente
+    let sizesData = undefined;
+    if (sizes !== undefined) {
+      if (!Array.isArray(sizes)) {
+        res.status(400).json({ message: "Sizes debe ser un arreglo de tamaños" });
+        return;
+      }
+      // Validar cada tamaño
+      sizesData = sizes.map((size: any) => {
+        if (
+          !size.size ||
+          typeof size.size !== 'string' ||
+          size.size.trim() === ''
+        ) {
+          throw new Error("Cada tamaño debe tener un 'size' válido");
+        }
+        if (
+          size.stockQuantity === undefined ||
+          typeof size.stockQuantity !== 'number'
+        ) {
+          throw new Error("Cada tamaño debe tener un 'stockQuantity' numérico");
+        }
+        return {
+          size: size.size,
+          stockQuantity: size.stockQuantity,
+        };
+      });
+    }
+
     // Verificar si el producto ya existe
     const existingProduct = await prisma.products.findUnique({
       where: { productId },
@@ -97,6 +152,21 @@ export const createProduct = async (
         price,
         rating,
         stockQuantity,
+        description,
+        gender,
+        // Si hay tamaños, crear las entradas relacionadas
+        sizes: sizesData
+          ? {
+              create: sizesData.map((size) => ({
+                id: undefined, // Deja que Prisma genere el ID automáticamente
+                size: size.size,
+                stockQuantity: size.stockQuantity,
+              })),
+            }
+          : undefined,
+      },
+      include: {
+        sizes: true, // Para devolver los tamaños creados junto con el producto
       },
     });
     res.status(201).json(product);
@@ -111,23 +181,76 @@ export const updateProduct = async (
 ): Promise<void> => {
   try {
     const productId = req.params.id;
-    const { name, price, rating, stockQuantity } = req.body;
+    const {
+      name,
+      price,
+      rating,
+      stockQuantity,
+      description,
+      gender,
+      sizes, // Opcionalmente, los nuevos tamaños
+    } = req.body;
+
+    // Validación similar a la de createProduct...
+
+    // Preparar los datos para la actualización
+    const updateData: any = {
+      name,
+      price,
+      rating,
+      stockQuantity,
+      description,
+      gender,
+    };
+
+    // Manejar la actualización de 'sizes' si se proporcionan
+    if (sizes !== undefined) {
+      if (!Array.isArray(sizes)) {
+        res.status(400).json({ message: "Sizes debe ser un arreglo de tamaños" });
+        return;
+      }
+
+      // Eliminar los tamaños existentes y agregar los nuevos
+      updateData.sizes = {
+        deleteMany: {}, // Elimina todos los tamaños asociados al producto
+        create: sizes.map((size: any) => {
+          if (
+            !size.size ||
+            typeof size.size !== 'string' ||
+            size.size.trim() === ''
+          ) {
+            throw new Error("Cada tamaño debe tener un 'size' válido");
+          }
+          if (
+            size.stockQuantity === undefined ||
+            typeof size.stockQuantity !== 'number'
+          ) {
+            throw new Error("Cada tamaño debe tener un 'stockQuantity' numérico");
+          }
+          return {
+            size: size.size,
+            stockQuantity: size.stockQuantity,
+          };
+        }),
+      };
+    }
+
     const updatedProduct = await prisma.products.update({
       where: {
         productId: productId,
       },
-      data: {
-        name,
-        price,
-        rating,
-        stockQuantity,
+      data: updateData,
+      include: {
+        sizes: true,
       },
     });
     res.json(updatedProduct);
   } catch (error) {
+    console.error("Error al actualizar el producto:", error);
     res.status(500).json({ message: "Error al actualizar el producto" });
   }
 };
+
 
 export const deleteProduct = async (
   req: Request,
