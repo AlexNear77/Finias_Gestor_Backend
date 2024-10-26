@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
+import cloudinary from "../config/cloudinary";
 
 const prisma = new PrismaClient();
 
@@ -19,7 +20,7 @@ export const getProducts = async (
           }
         : {},
       orderBy: {
-        name: 'asc',
+         createdAt: 'desc',
       },
       include: {
         sizes: true,
@@ -269,7 +270,15 @@ export const deleteProduct = async (
       return;
     }
 
-    // Eliminar el producto
+    // Eliminar la imagen de Cloudinary usando el productId
+    try {
+      await cloudinary.uploader.destroy(productId);
+      console.log(`Imagen con public_id ${productId} eliminada de Cloudinary.`);
+    } catch (error) {
+      console.error("Error al eliminar la imagen en Cloudinary:", error);
+    }
+
+    // Eliminar el producto de la base de datos
     await prisma.products.delete({
       where: { productId },
     });

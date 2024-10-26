@@ -8,9 +8,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteProduct = exports.updateProduct = exports.createProduct = exports.getProductById = exports.getProducts = void 0;
 const client_1 = require("@prisma/client");
+const cloudinary_1 = __importDefault(require("../config/cloudinary"));
 const prisma = new client_1.PrismaClient();
 const getProducts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
@@ -26,7 +30,8 @@ const getProducts = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
                 }
                 : {},
             orderBy: {
-                name: 'asc',
+                // Ordener por fecha de creación descendente// createdAt: 'desc',
+                createdAt: 'desc',
             },
             include: {
                 sizes: true,
@@ -230,7 +235,15 @@ const deleteProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             res.status(404).json({ message: "Producto no encontrado" });
             return;
         }
-        // Eliminar el producto
+        // Eliminar la imagen de Cloudinary usando el productId
+        try {
+            yield cloudinary_1.default.uploader.destroy(productId);
+            console.log(`Imagen con public_id ${productId} eliminada de Cloudinary.`);
+        }
+        catch (error) {
+            console.error("Error al eliminar la imagen en Cloudinary:", error);
+        }
+        // Eliminar el producto de la base de datos
         yield prisma.products.delete({
             where: { productId },
         });
