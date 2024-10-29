@@ -20,6 +20,9 @@ const getProducts = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     var _a;
     try {
         const search = (_a = req.query.search) === null || _a === void 0 ? void 0 : _a.toString();
+        const page = parseInt(req.query.page, 10) || 1; // Página actual
+        const limit = parseInt(req.query.limit, 10) || 8; // Productos por página
+        const skip = (page - 1) * limit;
         const products = yield prisma.products.findMany({
             where: search
                 ? {
@@ -30,14 +33,27 @@ const getProducts = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
                 }
                 : {},
             orderBy: {
-                // Ordener por fecha de creación descendente// createdAt: 'desc',
                 createdAt: 'desc',
             },
             include: {
                 sizes: true,
             },
+            skip: skip,
+            take: limit,
         });
-        res.json(products);
+        // Para un cálculo de total de páginas
+        const totalProducts = yield prisma.products.count({
+            where: search
+                ? {
+                    name: {
+                        contains: search,
+                        mode: 'insensitive',
+                    },
+                }
+                : {},
+        });
+        const totalPages = Math.ceil(totalProducts / limit);
+        res.json({ products, totalPages, currentPage: page });
     }
     catch (error) {
         res.status(500).json({ message: "Error retrieving products" });

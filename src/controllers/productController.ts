@@ -4,12 +4,13 @@ import cloudinary from "../config/cloudinary";
 
 const prisma = new PrismaClient();
 
-export const getProducts = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+export const getProducts = async (req: Request, res: Response): Promise<void> => {
   try {
     const search = req.query.search?.toString();
+    const page = parseInt(req.query.page as string, 10) || 1; // Página actual
+    const limit = parseInt(req.query.limit as string, 10) || 8; // Productos por página
+    const skip = (page - 1) * limit;
+
     const products = await prisma.products.findMany({
       where: search
         ? {
@@ -20,13 +21,29 @@ export const getProducts = async (
           }
         : {},
       orderBy: {
-         createdAt: 'desc',
+        createdAt: 'desc',
       },
       include: {
         sizes: true,
       },
+      skip: skip,
+      take: limit,
     });
-    res.json(products);
+
+    // Para un cálculo de total de páginas
+    const totalProducts = await prisma.products.count({
+      where: search
+        ? {
+            name: {
+              contains: search,
+              mode: 'insensitive',
+            },
+          }
+        : {},
+    });
+    const totalPages = Math.ceil(totalProducts / limit);
+
+    res.json({ products, totalPages, currentPage: page });
   } catch (error) {
     res.status(500).json({ message: "Error retrieving products" });
   }
