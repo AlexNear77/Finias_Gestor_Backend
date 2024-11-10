@@ -11,6 +11,7 @@ import productRoutes from './routes/productRoutes';
 import userRoutes from './routes/userRoutes';
 import expenseRoutes from './routes/expenseRoutes';
 import cloudinaryRoutes from './routes/cloudinaryRoutes';
+import branchRoutes from './routes/branchRoutes';
 
 /* Configs */
 dotenv.config();
@@ -24,6 +25,7 @@ app.use(bodyParser.urlencoded({extended:false}))
 app.use(cors());
 
 /* Routes */
+app.use('/branches',branchRoutes); // http://localhost:8000/branches
 app.use("/dashboard", dashboardRoutes); // http://localhost:8000/dashboard
 app.use("/products", productRoutes); // http://localhost:8000/products
 app.use("/users", userRoutes); // http://localhost:8000/users

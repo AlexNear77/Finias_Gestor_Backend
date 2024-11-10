@@ -19,11 +19,20 @@ model Users {
   email  String
 }
 
+model Branches {
+  branchId String     @id @default(uuid())
+  name     String
+  location String
+  products Products[]
+}
+
 model Products {
   productId     String        @id
   name          String
   price         Float
   rating        Float?
+  branchId      String?
+  branch        Branches?     @relation(fields: [branchId], references: [branchId], onDelete: Cascade)
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @default(now()) @updatedAt
   stockQuantity Int

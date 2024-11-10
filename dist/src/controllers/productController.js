@@ -17,46 +17,44 @@ const client_1 = require("@prisma/client");
 const cloudinary_1 = __importDefault(require("../config/cloudinary"));
 const prisma = new client_1.PrismaClient();
 const getProducts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
+    var _a, _b;
     try {
         const search = (_a = req.query.search) === null || _a === void 0 ? void 0 : _a.toString();
-        const page = parseInt(req.query.page, 10) || 1; // Página actual
-        const limit = parseInt(req.query.limit, 10) || 8; // Productos por página
+        const branchId = (_b = req.query.branchId) === null || _b === void 0 ? void 0 : _b.toString();
+        const page = parseInt(req.query.page, 10) || 1;
+        const limit = parseInt(req.query.limit, 10) || 8;
         const skip = (page - 1) * limit;
+        const whereCondition = {};
+        if (search) {
+            whereCondition.name = {
+                contains: search,
+                mode: 'insensitive',
+            };
+        }
+        if (branchId) {
+            whereCondition.branchId = branchId;
+        }
         const products = yield prisma.products.findMany({
-            where: search
-                ? {
-                    name: {
-                        contains: search,
-                        mode: 'insensitive',
-                    },
-                }
-                : {},
+            where: whereCondition,
             orderBy: {
                 createdAt: 'desc',
             },
             include: {
                 sizes: true,
+                branch: true, // Opcional, si quieres incluir la información de la sucursal
             },
             skip: skip,
             take: limit,
         });
-        // Para un cálculo de total de páginas
         const totalProducts = yield prisma.products.count({
-            where: search
-                ? {
-                    name: {
-                        contains: search,
-                        mode: 'insensitive',
-                    },
-                }
-                : {},
+            where: whereCondition,
         });
         const totalPages = Math.ceil(totalProducts / limit);
         res.json({ products, totalPages, currentPage: page });
     }
     catch (error) {
-        res.status(500).json({ message: "Error retrieving products" });
+        console.error("Error al obtener los productos:", error);
+        res.status(500).json({ message: "Error al obtener los productos" });
     }
 });
 exports.getProducts = getProducts;
@@ -68,7 +66,8 @@ const getProductById = (req, res) => __awaiter(void 0, void 0, void 0, function*
                 productId: productId,
             },
             include: {
-                sizes: true,
+                sizes: true, // Para devolver los tamaños asociados al producto
+                branch: true, // Opcional, si quieres incluir la información de la sucursal
             },
         });
         if (product) {
@@ -86,7 +85,7 @@ exports.getProductById = getProductById;
 const createProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { productId, name, price, rating, stockQuantity, description, gender, sizes, // Esperamos que 'sizes' sea un array de objetos con 'size' y 'stockQuantity'
-         } = req.body;
+        branchId } = req.body;
         // Validación de campos obligatorios y tipos de datos
         if (!productId || typeof productId !== 'string' || productId.trim() === '') {
             res.status(400).json({ message: "El ID del producto es obligatorio y debe ser una cadena no vacía" });
@@ -150,6 +149,16 @@ const createProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             res.status(400).json({ message: "El ID del producto ya existe" });
             return;
         }
+        // validar si branchId es proporcionado
+        if (branchId) {
+            const existingBranch = yield prisma.branches.findUnique({
+                where: { branchId },
+            });
+            if (!existingBranch) {
+                res.status(400).json({ message: "La sucursal proporcionada no existe" });
+                return;
+            }
+        }
         // Preparar datos para la creación del producto
         const product = yield prisma.products.create({
             data: {
@@ -160,6 +169,7 @@ const createProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                 stockQuantity,
                 description,
                 gender,
+                branchId,
                 // Si hay tamaños, crear las entradas relacionadas
                 sizes: sizesData
                     ? {
@@ -173,6 +183,7 @@ const createProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             },
             include: {
                 sizes: true, // Para devolver los tamaños creados junto con el producto
+                branch: true, // Opcional, si quieres incluir la información de la sucursal
             },
         });
         res.status(201).json(product);
@@ -186,8 +197,18 @@ const updateProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     try {
         const productId = req.params.id;
         const { name, price, rating, stockQuantity, description, gender, sizes, // Opcionalmente, los nuevos tamaños
-         } = req.body;
+        branchId, } = req.body;
         // Validación similar a la de createProduct...
+        //validando branchId
+        if (branchId) {
+            const existingBranch = yield prisma.branches.findUnique({
+                where: { branchId },
+            });
+            if (!existingBranch) {
+                res.status(400).json({ message: "La sucursal proporcionada no existe" });
+                return;
+            }
+        }
         // Preparar los datos para la actualización
         const updateData = {
             name,
@@ -196,6 +217,7 @@ const updateProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             stockQuantity,
             description,
             gender,
+            branchId,
         };
         // Manejar la actualización de 'sizes' si se proporcionan
         if (sizes !== undefined) {
@@ -230,6 +252,7 @@ const updateProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             data: updateData,
             include: {
                 sizes: true,
+                branch: true,
             },
         });
         res.json(updatedProduct);

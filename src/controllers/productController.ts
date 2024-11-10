@@ -7,45 +7,46 @@ const prisma = new PrismaClient();
 export const getProducts = async (req: Request, res: Response): Promise<void> => {
   try {
     const search = req.query.search?.toString();
-    const page = parseInt(req.query.page as string, 10) || 1; // Página actual
-    const limit = parseInt(req.query.limit as string, 10) || 8; // Productos por página
+    const branchId = req.query.branchId?.toString();
+    const page = parseInt(req.query.page as string, 10) || 1;
+    const limit = parseInt(req.query.limit as string, 10) || 8;
     const skip = (page - 1) * limit;
 
+    const whereCondition: any = {};
+
+    if (search) {
+      whereCondition.name = {
+        contains: search,
+        mode: 'insensitive',
+      };
+    }
+
+    if (branchId) {
+      whereCondition.branchId = branchId;
+    }
+
     const products = await prisma.products.findMany({
-      where: search
-        ? {
-            name: {
-              contains: search,
-              mode: 'insensitive',
-            },
-          }
-        : {},
+      where: whereCondition,
       orderBy: {
         createdAt: 'desc',
       },
       include: {
         sizes: true,
+        branch: true, // Opcional, si quieres incluir la información de la sucursal
       },
       skip: skip,
       take: limit,
     });
 
-    // Para un cálculo de total de páginas
     const totalProducts = await prisma.products.count({
-      where: search
-        ? {
-            name: {
-              contains: search,
-              mode: 'insensitive',
-            },
-          }
-        : {},
+      where: whereCondition,
     });
     const totalPages = Math.ceil(totalProducts / limit);
 
     res.json({ products, totalPages, currentPage: page });
   } catch (error) {
-    res.status(500).json({ message: "Error retrieving products" });
+    console.error("Error al obtener los productos:", error);
+    res.status(500).json({ message: "Error al obtener los productos" });
   }
 };
 
@@ -61,7 +62,8 @@ export const getProductById = async (
         productId: productId,
       },
       include: {
-        sizes: true,
+        sizes: true,  // Para devolver los tamaños asociados al producto
+        branch: true, // Opcional, si quieres incluir la información de la sucursal
       },
     });
     if (product) {
@@ -88,6 +90,7 @@ export const createProduct = async (
       description,
       gender,
       sizes, // Esperamos que 'sizes' sea un array de objetos con 'size' y 'stockQuantity'
+      branchId
     } = req.body;
 
      // Validación de campos obligatorios y tipos de datos
@@ -162,6 +165,18 @@ export const createProduct = async (
       return;
     }
 
+    // validar si branchId es proporcionado
+    if (branchId) {
+      const existingBranch = await prisma.branches.findUnique({
+        where: { branchId },
+      });
+      if (!existingBranch) {
+        res.status(400).json({ message: "La sucursal proporcionada no existe" });
+        return;
+      }
+    }
+    
+
     // Preparar datos para la creación del producto
     const product = await prisma.products.create({
       data: {
@@ -172,6 +187,7 @@ export const createProduct = async (
         stockQuantity,
         description,
         gender,
+        branchId,
         // Si hay tamaños, crear las entradas relacionadas
         sizes: sizesData
           ? {
@@ -185,6 +201,7 @@ export const createProduct = async (
       },
       include: {
         sizes: true, // Para devolver los tamaños creados junto con el producto
+        branch: true, // Opcional, si quieres incluir la información de la sucursal
       },
     });
     res.status(201).json(product);
@@ -207,10 +224,21 @@ export const updateProduct = async (
       description,
       gender,
       sizes, // Opcionalmente, los nuevos tamaños
+      branchId,
     } = req.body;
 
     // Validación similar a la de createProduct...
 
+    //validando branchId
+    if (branchId) {
+      const existingBranch = await prisma.branches.findUnique({
+        where: { branchId },
+      });
+      if (!existingBranch) {
+        res.status(400).json({ message: "La sucursal proporcionada no existe" });
+        return;
+      }
+    }
     // Preparar los datos para la actualización
     const updateData: any = {
       name,
@@ -219,6 +247,7 @@ export const updateProduct = async (
       stockQuantity,
       description,
       gender,
+      branchId,
     };
 
     // Manejar la actualización de 'sizes' si se proporcionan
@@ -260,6 +289,7 @@ export const updateProduct = async (
       data: updateData,
       include: {
         sizes: true,
+        branch: true,
       },
     });
     res.json(updatedProduct);
