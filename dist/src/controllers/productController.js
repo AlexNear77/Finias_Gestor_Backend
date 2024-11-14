@@ -84,7 +84,7 @@ const getProductById = (req, res) => __awaiter(void 0, void 0, void 0, function*
 exports.getProductById = getProductById;
 const createProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { productId, name, price, rating, stockQuantity, description, gender, sizes, // Esperamos que 'sizes' sea un array de objetos con 'size' y 'stockQuantity'
+        const { productId, name, price, rating, description, gender, sizes, // Esperamos que 'sizes' sea un array de objetos con 'size' y 'stockQuantity'
         branchId } = req.body;
         // Validación de campos obligatorios y tipos de datos
         if (!productId || typeof productId !== 'string' || productId.trim() === '') {
@@ -97,10 +97,6 @@ const createProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         }
         if (price === undefined || typeof price !== 'number') {
             res.status(400).json({ message: "El precio es obligatorio y debe ser un número" });
-            return;
-        }
-        if (stockQuantity === undefined || typeof stockQuantity !== 'number') {
-            res.status(400).json({ message: "La cantidad de stock es obligatoria y debe ser un número" });
             return;
         }
         // Validación de 'rating' si está presente
@@ -166,7 +162,6 @@ const createProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                 name,
                 price,
                 rating,
-                stockQuantity,
                 description,
                 gender,
                 branchId,
@@ -196,7 +191,7 @@ exports.createProduct = createProduct;
 const updateProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const productId = req.params.id;
-        const { name, price, rating, stockQuantity, description, gender, sizes, // Opcionalmente, los nuevos tamaños
+        const { name, price, rating, description, gender, sizes, // Opcionalmente, los nuevos tamaños
         branchId, } = req.body;
         // Validación similar a la de createProduct...
         //validando branchId
@@ -214,7 +209,6 @@ const updateProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             name,
             price,
             rating,
-            stockQuantity,
             description,
             gender,
             branchId,

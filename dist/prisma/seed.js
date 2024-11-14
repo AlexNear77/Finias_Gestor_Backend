@@ -40,7 +40,6 @@ function main() {
         const orderedFileNames = [
             "products.json",
             "expenseSummary.json",
-            "sales.json",
             "salesSummary.json",
             "purchases.json",
             "purchaseSummary.json",

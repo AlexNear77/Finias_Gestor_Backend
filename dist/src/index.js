@@ -16,6 +16,7 @@ const userRoutes_1 = __importDefault(require("./routes/userRoutes"));
 const expenseRoutes_1 = __importDefault(require("./routes/expenseRoutes"));
 const cloudinaryRoutes_1 = __importDefault(require("./routes/cloudinaryRoutes"));
 const branchRoutes_1 = __importDefault(require("./routes/branchRoutes"));
+const salesRoutes_1 = __importDefault(require("./routes/salesRoutes"));
 /* Configs */
 dotenv_1.default.config();
 const app = (0, express_1.default)();
@@ -33,6 +34,7 @@ app.use("/products", productRoutes_1.default); // http://localhost:8000/products
 app.use("/users", userRoutes_1.default); // http://localhost:8000/users
 app.use("/expenses", expenseRoutes_1.default); // http://localhost:8000/expenses
 app.use('/cloudinary', cloudinaryRoutes_1.default); // http://localhost:8000/cloudinary
+app.use('/sales', salesRoutes_1.default); // http://localhost:8000/sales
 /* Server */
 const port = process.env.PORT || 3003;
 app.listen(port, () => {

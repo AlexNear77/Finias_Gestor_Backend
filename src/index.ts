@@ -12,6 +12,7 @@ import userRoutes from './routes/userRoutes';
 import expenseRoutes from './routes/expenseRoutes';
 import cloudinaryRoutes from './routes/cloudinaryRoutes';
 import branchRoutes from './routes/branchRoutes';
+import salesRoutes from './routes/salesRoutes';
 
 /* Configs */
 dotenv.config();
@@ -31,6 +32,7 @@ app.use("/products", productRoutes); // http://localhost:8000/products
 app.use("/users", userRoutes); // http://localhost:8000/users
 app.use("/expenses", expenseRoutes); // http://localhost:8000/expenses
 app.use('/cloudinary', cloudinaryRoutes); // http://localhost:8000/cloudinary
+app.use('/sales', salesRoutes); // http://localhost:8000/sales
 
 /* Server */
 const port = process.env.PORT || 3003;

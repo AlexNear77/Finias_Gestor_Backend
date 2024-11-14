@@ -27,20 +27,19 @@ model Branches {
 }
 
 model Products {
-  productId     String        @id
-  name          String
-  price         Float
-  rating        Float?
-  branchId      String?
-  branch        Branches?     @relation(fields: [branchId], references: [branchId], onDelete: Cascade)
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @default(now()) @updatedAt
-  stockQuantity Int
-  Sales         Sales[]
-  Purchases     Purchases[]
-  description   String?
-  sizes         ProductSize[] // Relación con los tamaños y stock específico por tamaño
-  gender        String?
+  productId   String        @id
+  name        String
+  price       Float
+  rating      Float?
+  branchId    String?
+  branch      Branches?     @relation(fields: [branchId], references: [branchId], onDelete: Cascade)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @default(now()) @updatedAt
+  Purchases   Purchases[]
+  description String?
+  sizes       ProductSize[] // Relación con los tamaños y stock específico por tamaño
+  gender      String?
+  SaleItems   SaleItems[]
 }
 
 model ProductSize {
@@ -52,13 +51,30 @@ model ProductSize {
 }
 
 model Sales {
-  saleId      String   @id
-  productId   String
-  timestamp   DateTime
-  quantity    Int
-  unitPrice   Float
-  totalAmount Float
-  product     Products @relation(fields: [productId], references: [productId], onDelete: Cascade)
+  saleId        String        @id @default(cuid())
+  date          DateTime      @default(now())
+  totalAmount   Float
+  paymentMethod PaymentMethod @default(CASH)
+  saleItems     SaleItems[]
+}
+
+enum PaymentMethod {
+  CASH
+  CREDIT_CARD
+  DEBIT_CARD
+  MOBILE_PAYMENT
+  // Agrega más métodos de pago en el futuro
+}
+
+model SaleItems {
+  id        String   @id @default(cuid())
+  quantity  Int
+  price     Float
+  size      String
+  productId String
+  product   Products @relation(fields: [productId], references: [productId], onDelete: Cascade)
+  saleId    String
+  sale      Sales    @relation(fields: [saleId], references: [saleId], onDelete: Cascade)
 }
 
 model Purchases {

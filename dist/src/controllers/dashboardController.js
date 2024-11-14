@@ -17,7 +17,7 @@ const getDashboardMetrics = (req, res) => __awaiter(void 0, void 0, void 0, func
         const popularProducts = yield prisma.products.findMany({
             take: 15,
             orderBy: {
-                stockQuantity: "desc",
+                rating: "desc",
             },
         });
         const salesSummary = yield prisma.salesSummary.findMany({

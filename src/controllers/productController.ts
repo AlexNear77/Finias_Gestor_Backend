@@ -86,7 +86,6 @@ export const createProduct = async (
       name,
       price,
       rating,
-      stockQuantity,
       description,
       gender,
       sizes, // Esperamos que 'sizes' sea un array de objetos con 'size' y 'stockQuantity'
@@ -104,10 +103,6 @@ export const createProduct = async (
     }
     if (price === undefined || typeof price !== 'number') {
       res.status(400).json({ message: "El precio es obligatorio y debe ser un número" });
-      return;
-    }
-    if (stockQuantity === undefined || typeof stockQuantity !== 'number') {
-      res.status(400).json({ message: "La cantidad de stock es obligatoria y debe ser un número" });
       return;
     }
 
@@ -184,7 +179,6 @@ export const createProduct = async (
         name,
         price,
         rating,
-        stockQuantity,
         description,
         gender,
         branchId,
@@ -220,7 +214,6 @@ export const updateProduct = async (
       name,
       price,
       rating,
-      stockQuantity,
       description,
       gender,
       sizes, // Opcionalmente, los nuevos tamaños
@@ -244,7 +237,6 @@ export const updateProduct = async (
       name,
       price,
       rating,
-      stockQuantity,
       description,
       gender,
       branchId,
