@@ -35,7 +35,7 @@ app.use('/cloudinary', cloudinaryRoutes); // http://localhost:8000/cloudinary
 app.use('/sales', salesRoutes); // http://localhost:8000/sales
 
 /* Server */
-const port = process.env.PORT || 3003;
-app.listen(port, () => {
+const port = Number(process.env.PORT) || 3003;
+app.listen(port, "0.0.0.0", () => {
   console.log(`Server is running on port ${port}`);
 });
